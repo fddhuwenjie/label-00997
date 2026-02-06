@@ -25,7 +25,6 @@ build-*/
 *.exe
 *.app
 *.out
-RadarPPI
 
 # macOS
 .DS_Store
