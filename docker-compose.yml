@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  radar-ppi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: radar-ppi-app
+    environment:
+      - DISPLAY=:1
+      - VNC_RESOLUTION=1280x800
+      - VNC_PW=radar123
+    ports:
+      - "6080:6080"   # NoVNC Web Access
+      - "5901:5901"   # VNC Direct Access (optional)
+    restart: unless-stopped
+
+# ===========================================
+# 启动命令: docker compose up --build
+# 访问地址: http://localhost:6080
+# VNC密码:  radar123
+# ===========================================

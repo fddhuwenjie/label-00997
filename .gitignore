@@ -1,0 +1,49 @@
+# Qt Generated Files
+*.o
+*.obj
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.moc
+
+# Qt Build Directories
+build/
+debug/
+release/
+build-*/
+
+# Qt Project User Files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+*.prl
+
+# Compiled Binaries
+*.exe
+*.app
+*.out
+RadarPPI
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.docker/
+
+# Temporary Files
+*.log
+*.tmp
+*.temp
