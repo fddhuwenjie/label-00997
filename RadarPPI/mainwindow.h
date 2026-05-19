@@ -10,6 +10,8 @@
 
 // 前向声明
 class RadarWidget;
+class TrackPlayer;
+class TrackControlPanel;
 
 namespace Ui {
 class MainWindow;
@@ -60,10 +62,17 @@ private:
      */
     void connectSignals();
 
+    /**
+     * @brief 初始化轨迹回放模块
+     */
+    void initTrackPlayback();
+
 private:
     Ui::MainWindow *ui;
-    RadarWidget *m_radarWidget;  ///< 雷达显示控件
-    bool m_isRunning;            ///< 运行状态
+    RadarWidget *m_radarWidget;                ///< 雷达显示控件
+    TrackPlayer *m_trackPlayer;               ///< 轨迹回放播放器
+    TrackControlPanel *m_trackControlPanel;   ///< 轨迹回放控制面板
+    bool m_isRunning;                         ///< 运行状态
 };
 
 #endif // MAINWINDOW_H

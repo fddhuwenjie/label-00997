@@ -6,6 +6,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "radarwidget.h"
+#include "trackplayer.h"
+#include "trackcontrolpanel.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -27,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 创建雷达显示控件
     m_radarWidget = new RadarWidget(this);
     ui->radarContainer->layout()->addWidget(m_radarWidget);
+
+    // 初始化轨迹回放模块
+    initTrackPlayback();
 
     // 初始化样式
     setupStyle();
@@ -61,6 +66,10 @@ void MainWindow::setupStyle()
             background-color: #0F1410;
             border-top: 1px solid #1A251A;
         }
+        QWidget#trackControlContainer {
+            background-color: #0F1410;
+            border-top: 1px solid #1A251A;
+        }
         QPushButton {
             background-color: #1A251A;
             border: 1px solid #007A1E;
@@ -84,6 +93,11 @@ void MainWindow::setupStyle()
             border-color: #1A251A;
             color: #4A5A4A;
         }
+        QPushButton:checked {
+            background-color: #004A12;
+            border-color: #00FF41;
+            color: #00FF41;
+        }
         QPushButton#startButton {
             border-color: #00FF41;
             color: #00FF41;
@@ -100,6 +114,10 @@ void MainWindow::setupStyle()
             font-size: 12px;
         }
         QLabel#statusLabel {
+            color: #00AA2A;
+            font-family: Consolas, Monaco, monospace;
+        }
+        QLabel#progressLabel {
             color: #00AA2A;
             font-family: Consolas, Monaco, monospace;
         }
@@ -124,8 +142,46 @@ void MainWindow::connectSignals()
     // 雷达控件信号连接
     connect(m_radarWidget, &RadarWidget::angleChanged, this, &MainWindow::updateStatusBar);
 
+    // 轨迹回放信号槽连接
+    connect(m_trackControlPanel, &TrackControlPanel::loadFileRequested,
+            m_trackPlayer, &TrackPlayer::loadFromFile);
+    connect(m_trackControlPanel, &TrackControlPanel::playRequested,
+            m_trackPlayer, &TrackPlayer::play);
+    connect(m_trackControlPanel, &TrackControlPanel::pauseRequested,
+            m_trackPlayer, &TrackPlayer::pause);
+    connect(m_trackControlPanel, &TrackControlPanel::stopRequested,
+            m_trackPlayer, &TrackPlayer::stop);
+    connect(m_trackControlPanel, &TrackControlPanel::speedChanged,
+            m_trackPlayer, [this](int speed) {
+                m_trackPlayer->setPlaybackSpeed(static_cast<TrackPlayer::PlaybackSpeed>(speed));
+            });
+
+    // TrackPlayer -> TrackControlPanel
+    connect(m_trackPlayer, &TrackPlayer::playbackStarted,
+            m_trackControlPanel, &TrackControlPanel::onPlaybackStarted);
+    connect(m_trackPlayer, &TrackPlayer::playbackPaused,
+            m_trackControlPanel, &TrackControlPanel::onPlaybackPaused);
+    connect(m_trackPlayer, &TrackPlayer::playbackStopped,
+            m_trackControlPanel, &TrackControlPanel::onPlaybackStopped);
+    connect(m_trackPlayer, &TrackPlayer::playbackFinished,
+            m_trackControlPanel, &TrackControlPanel::onPlaybackFinished);
+    connect(m_trackPlayer, &TrackPlayer::progressChanged,
+            m_trackControlPanel, &TrackControlPanel::onProgressChanged);
+    connect(m_trackPlayer, &TrackPlayer::errorOccurred,
+            m_trackControlPanel, &TrackControlPanel::onFileLoadError);
+
     // 初始按钮状态
     ui->stopButton->setEnabled(false);
+}
+
+void MainWindow::initTrackPlayback()
+{
+    // 创建轨迹回放播放器
+    m_trackPlayer = new TrackPlayer(this);
+
+    // 创建轨迹回放控制面板
+    m_trackControlPanel = new TrackControlPanel(this);
+    ui->trackControlContainer->layout()->addWidget(m_trackControlPanel);
 }
 
 void MainWindow::onStartClicked()
