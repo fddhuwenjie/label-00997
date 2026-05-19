@@ -6,15 +6,21 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "radarwidget.h"
+#include "trackplayer.h"
+#include "trackcontrolpanel.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QFileDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_radarWidget(nullptr)
+    , m_trackPlayer(nullptr)
+    , m_trackControlPanel(nullptr)
     , m_isRunning(false)
 {
     ui->setupUi(this);
@@ -27,6 +33,13 @@ MainWindow::MainWindow(QWidget *parent)
     // 创建雷达显示控件
     m_radarWidget = new RadarWidget(this);
     ui->radarContainer->layout()->addWidget(m_radarWidget);
+
+    // 创建轨迹回放控制器
+    m_trackPlayer = new TrackPlayer(this);
+
+    // 创建轨迹回放控制面板
+    m_trackControlPanel = new TrackControlPanel(this);
+    ui->trackControlContainer->layout()->addWidget(m_trackControlPanel);
 
     // 初始化样式
     setupStyle();
@@ -60,6 +73,11 @@ void MainWindow::setupStyle()
         QWidget#controlPanel {
             background-color: #0F1410;
             border-top: 1px solid #1A251A;
+        }
+        QWidget#trackControlContainer {
+            background-color: #0F1410;
+            border-top: 1px solid #1A251A;
+            border-bottom: 1px solid #1A251A;
         }
         QPushButton {
             background-color: #1A251A;
@@ -109,6 +127,34 @@ void MainWindow::setupStyle()
             color: #00AA2A;
             font-size: 12px;
         }
+        QComboBox {
+            background-color: #1A251A;
+            border: 1px solid #007A1E;
+            border-radius: 4px;
+            color: #00AA2A;
+            padding: 4px 8px;
+            min-width: 60px;
+        }
+        QComboBox:hover {
+            border-color: #00AA2A;
+        }
+        QComboBox::drop-down {
+            border: none;
+            width: 20px;
+        }
+        QComboBox::down-arrow {
+            image: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid #00AA2A;
+        }
+        QComboBox QAbstractItemView {
+            background-color: #0F1410;
+            border: 1px solid #007A1E;
+            color: #00AA2A;
+            selection-background-color: #1A251A;
+            selection-color: #00FF41;
+        }
     )";
 
     this->setStyleSheet(globalStyle);
@@ -123,6 +169,20 @@ void MainWindow::connectSignals()
 
     // 雷达控件信号连接
     connect(m_radarWidget, &RadarWidget::angleChanged, this, &MainWindow::updateStatusBar);
+
+    // 轨迹回放控制面板信号
+    connect(m_trackControlPanel, &TrackControlPanel::loadTrackRequested, this, &MainWindow::onLoadTrackRequested);
+    connect(m_trackControlPanel, &TrackControlPanel::playRequested, this, &MainWindow::onPlayRequested);
+    connect(m_trackControlPanel, &TrackControlPanel::pauseRequested, this, &MainWindow::onPauseRequested);
+    connect(m_trackControlPanel, &TrackControlPanel::stopRequested, this, &MainWindow::onStopTrackRequested);
+    connect(m_trackControlPanel, &TrackControlPanel::speedChanged, this, &MainWindow::onSpeedChanged);
+
+    // 轨迹回放控制器信号 -> 雷达显示控件
+    connect(m_trackPlayer, &TrackPlayer::trackPointUpdated, m_radarWidget, &RadarWidget::onTrackPointUpdated);
+    connect(m_trackPlayer, &TrackPlayer::playbackTimeChanged, m_trackControlPanel, &TrackControlPanel::updateTimeDisplay);
+    connect(m_trackPlayer, &TrackPlayer::playbackFinished, m_trackControlPanel, &TrackControlPanel::onPlaybackFinished);
+    connect(m_trackPlayer, &TrackPlayer::playbackFinished, this, &MainWindow::onPlaybackFinished);
+    connect(m_trackPlayer, &TrackPlayer::trackLoaded, m_trackControlPanel, &TrackControlPanel::onTrackLoaded);
 
     // 初始按钮状态
     ui->stopButton->setEnabled(false);
@@ -167,4 +227,50 @@ void MainWindow::updateStatusBar(double angle)
 
     QString rpmText = QString("转速: %1 RPM").arg(m_radarWidget->getRPM());
     ui->rpmLabel->setText(rpmText);
+}
+
+void MainWindow::onLoadTrackRequested()
+{
+    QString filePath = QFileDialog::getOpenFileName(
+        this, "选择轨迹数据文件", QString(),
+        "JSON 文件 (*.json);;所有文件 (*)");
+
+    if (filePath.isEmpty()) return;
+
+    m_trackPlayer->stop();
+    m_radarWidget->clearTrackData();
+
+    bool ok = m_trackPlayer->loadTrackFile(filePath);
+    if (!ok) {
+        QMessageBox::warning(this, "加载失败", "无法解析轨迹数据文件，请检查文件格式。");
+    }
+}
+
+void MainWindow::onPlayRequested()
+{
+    m_trackPlayer->play();
+    m_trackControlPanel->setPlayingState(true);
+}
+
+void MainWindow::onPauseRequested()
+{
+    m_trackPlayer->pause();
+    m_trackControlPanel->setPlayingState(false);
+}
+
+void MainWindow::onStopTrackRequested()
+{
+    m_trackPlayer->stop();
+    m_radarWidget->clearTrackData();
+    m_trackControlPanel->setPlayingState(false);
+}
+
+void MainWindow::onSpeedChanged(int multiplier)
+{
+    m_trackPlayer->setSpeed(multiplier);
+}
+
+void MainWindow::onPlaybackFinished()
+{
+    m_trackControlPanel->setPlayingState(false);
 }

@@ -13,23 +13,28 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = RadarPPI
 TEMPLATE = app
 
-# C++11 标准
-CONFIG += c++11
+# C++17 标准
+CONFIG += c++17
+
+QMAKE_CXXFLAGS += -Wno-c++11-narrowing
 
 # 源文件
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    radarwidget.cpp
+    radarwidget.cpp \
+    trackplayer.cpp \
+    trackcontrolpanel.cpp
 
-# 头文件
 HEADERS += \
     mainwindow.h \
-    radarwidget.h
+    radarwidget.h \
+    trackplayer.h \
+    trackcontrolpanel.h
 
-# UI 文件
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    trackcontrolpanel.ui
 
 # 默认部署规则
 qnx: target.path = /tmp/$${TARGET}/bin

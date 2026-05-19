@@ -123,7 +123,9 @@ void RadarWidget::paintEvent(QPaintEvent *event)
     drawDistanceRings(painter);
     drawAzimuthLines(painter);
     drawCrossHair(painter);
+    drawTrackTrails(painter);
     drawTargets(painter);
+    drawTrackTargetMarkers(painter);
     drawSweepLine(painter);
     drawLabels(painter);
 }
@@ -247,14 +249,11 @@ void RadarWidget::drawLabels(QPainter &painter)
         );
     }
 
-    // 距离标注 (右侧)
     for (int i = 1; i <= m_distanceRings; ++i) {
         double dist = (double)i / m_distanceRings;
-        QPointF pos = polarToCartesian(dist, 85); // 稍微偏离正东方向
+        QPointF pos = polarToCartesian(dist, 85);
 
-        QString text = QString("%1").arg(i * 20); // 假设最大100km
-        QFontMetrics fm(font);
-        int textWidth = fm.horizontalAdvance(text);
+        QString text = QString("%1").arg(i * 20);
 
         painter.drawText(pos.x() + 5, pos.y() + 4, text);
     }
@@ -383,5 +382,71 @@ void RadarWidget::drawTargets(QPainter &painter)
         // 绘制目标核心
         painter.setBrush(QColor(0, 255, 65, int(255 * target.brightness)));
         painter.drawEllipse(pos, size * 0.5, size * 0.5);
+    }
+}
+
+void RadarWidget::onTrackPointUpdated(const QString &targetId, double azimuth, double distance)
+{
+    TrackDisplayPoint pt;
+    pt.distance = distance;
+    pt.azimuth = azimuth;
+    m_trackTrails[targetId].append(pt);
+    update();
+}
+
+void RadarWidget::clearTrackData()
+{
+    m_trackTrails.clear();
+    update();
+}
+
+void RadarWidget::drawTrackTrails(QPainter &painter)
+{
+    if (m_trackTrails.isEmpty()) return;
+
+    for (auto it = m_trackTrails.constBegin(); it != m_trackTrails.constEnd(); ++it) {
+        const QVector<TrackDisplayPoint> &trail = it.value();
+        if (trail.size() < 2) continue;
+
+        int totalPts = trail.size();
+        for (int i = 1; i < totalPts; ++i) {
+            double alpha = 60 + 140.0 * (i / static_cast<double>(totalPts));
+            QPen trailPen(QColor(255, 200, 50, static_cast<int>(alpha)), 2);
+            painter.setPen(trailPen);
+            QPointF p1 = polarToCartesian(trail[i - 1].distance, trail[i - 1].azimuth);
+            QPointF p2 = polarToCartesian(trail[i].distance, trail[i].azimuth);
+            painter.drawLine(p1, p2);
+        }
+    }
+}
+
+void RadarWidget::drawTrackTargetMarkers(QPainter &painter)
+{
+    if (m_trackTrails.isEmpty()) return;
+
+    for (auto it = m_trackTrails.constBegin(); it != m_trackTrails.constEnd(); ++it) {
+        const QVector<TrackDisplayPoint> &trail = it.value();
+        if (trail.isEmpty()) continue;
+
+        const TrackDisplayPoint &last = trail.last();
+        QPointF pos = polarToCartesian(last.distance, last.azimuth);
+
+        QRadialGradient glow(pos, 14);
+        glow.setColorAt(0.0, QColor(255, 200, 50, 230));
+        glow.setColorAt(0.4, QColor(255, 170, 30, 120));
+        glow.setColorAt(1.0, QColor(255, 150, 0, 0));
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(glow);
+        painter.drawEllipse(pos, 14, 14);
+
+        painter.setBrush(QColor(255, 200, 50));
+        painter.drawEllipse(pos, 4, 4);
+
+        QFont idFont("Consolas", 8);
+        painter.setFont(idFont);
+        painter.setPen(QColor(255, 220, 100));
+        QFontMetrics fm(idFont);
+        int tw = fm.horizontalAdvance(it.key());
+        painter.drawText(pos.x() - tw / 2, pos.y() - 14, it.key());
     }
 }

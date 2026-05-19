@@ -10,11 +10,17 @@
 #include <QTimer>
 #include <QVector>
 #include <QPointF>
+#include <QMap>
 
 /**
  * @struct RadarTarget
  * @brief 雷达目标数据结构
  */
+struct TrackDisplayPoint {
+    double distance;
+    double azimuth;
+};
+
 struct RadarTarget {
     double distance;      ///< 距离 (0.0 - 1.0, 归一化)
     double azimuth;       ///< 方位角 (度)
@@ -76,6 +82,10 @@ public:
      */
     void setRPM(int rpm);
 
+public slots:
+    void onTrackPointUpdated(const QString &targetId, double azimuth, double distance);
+    void clearTrackData();
+
 signals:
     /**
      * @brief 扫描角度变化信号
@@ -134,6 +144,10 @@ private:
      */
     void drawTargets(QPainter &painter);
 
+    void drawTrackTrails(QPainter &painter);
+
+    void drawTrackTargetMarkers(QPainter &painter);
+
     /**
      * @brief 初始化模拟目标
      */
@@ -180,6 +194,8 @@ private:
     QColor m_colorGhostGreen;
     QColor m_colorBackground;
     QColor m_colorBackgroundCenter;
+
+    QMap<QString, QVector<TrackDisplayPoint>> m_trackTrails;
 };
 
 #endif // RADARWIDGET_H

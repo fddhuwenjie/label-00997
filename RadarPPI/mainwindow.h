@@ -10,6 +10,8 @@
 
 // 前向声明
 class RadarWidget;
+class TrackPlayer;
+class TrackControlPanel;
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +51,14 @@ private slots:
      */
     void updateStatusBar(double angle);
 
+private slots:
+    void onLoadTrackRequested();
+    void onPlayRequested();
+    void onPauseRequested();
+    void onStopTrackRequested();
+    void onSpeedChanged(int multiplier);
+    void onPlaybackFinished();
+
 private:
     /**
      * @brief 初始化UI样式
@@ -62,8 +72,10 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    RadarWidget *m_radarWidget;  ///< 雷达显示控件
-    bool m_isRunning;            ///< 运行状态
+    RadarWidget *m_radarWidget;
+    TrackPlayer *m_trackPlayer;
+    TrackControlPanel *m_trackControlPanel;
+    bool m_isRunning;
 };
 
 #endif // MAINWINDOW_H
