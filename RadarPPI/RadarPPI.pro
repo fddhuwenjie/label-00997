@@ -20,16 +20,21 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    radarwidget.cpp
+    radarwidget.cpp \
+    trackplayer.cpp \
+    trackcontrolpanel.cpp
 
 # 头文件
 HEADERS += \
     mainwindow.h \
-    radarwidget.h
+    radarwidget.h \
+    trackplayer.h \
+    trackcontrolpanel.h
 
 # UI 文件
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    trackcontrolpanel.ui
 
 # 默认部署规则
 qnx: target.path = /tmp/$${TARGET}/bin
