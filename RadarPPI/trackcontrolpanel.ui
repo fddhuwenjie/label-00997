@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TrackControlPanel</class>
+ <widget class="QWidget" name="TrackControlPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>120</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>120</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>120</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string>
+    QWidget#TrackControlPanel {
+     background-color: #0F1410;
+     border-top: 1px solid #1A251A;
+    }
+    QLabel {
+     color: #00AA2A;
+     font-size: 12px;
+    }
+    QLabel#timeLabel, QLabel#durationLabel {
+     font-family: Consolas, Monaco, monospace;
+     min-width: 60px;
+    }
+    QLabel#trackInfoLabel {
+     color: #007A1E;
+     font-size: 11px;
+    }
+    QPushButton {
+     background-color: #1A251A;
+     border: 1px solid #007A1E;
+     border-radius: 4px;
+     color: #00AA2A;
+     padding: 6px 16px;
+     min-width: 60px;
+     font-size: 12px;
+    }
+    QPushButton:hover {
+     background-color: #243024;
+     border-color: #00AA2A;
+     color: #00FF41;
+    }
+    QPushButton:pressed {
+     background-color: #00AA2A;
+     color: #0A0F0A;
+    }
+    QPushButton:disabled {
+     background-color: #0F1410;
+     border-color: #1A251A;
+     color: #4A5A4A;
+    }
+    QPushButton#playButton {
+     border-color: #00FF41;
+     color: #00FF41;
+    }
+    QPushButton#pauseButton {
+     border-color: #FFAA00;
+     color: #FFAA00;
+    }
+    QPushButton#stopButton {
+     border-color: #FF3333;
+     color: #FF3333;
+    }
+    QPushButton#loadButton {
+     border-color: #00AAFF;
+     color: #00AAFF;
+    }
+    QSlider#progressSlider {
+     min-height: 20px;
+    }
+    QSlider#progressSlider::groove:horizontal {
+     border: 1px solid #1A251A;
+     height: 6px;
+     background: #0A0F0A;
+     border-radius: 3px;
+    }
+    QSlider#progressSlider::sub-page:horizontal {
+     background: #00AA2A;
+     border-radius: 3px;
+    }
+    QSlider#progressSlider::add-page:horizontal {
+     background: #1A251A;
+     border-radius: 3px;
+    }
+    QSlider#progressSlider::handle:horizontal {
+     background: #00FF41;
+     border: 2px solid #00AA2A;
+     width: 14px;
+     margin: -5px 0;
+     border-radius: 7px;
+    }
+    QSlider#progressSlider::handle:horizontal:hover {
+     background: #00FF41;
+     border-color: #00FF41;
+    }
+    QComboBox#speedComboBox {
+     background-color: #1A251A;
+     border: 1px solid #007A1E;
+     border-radius: 4px;
+     color: #00AA2A;
+     padding: 4px 10px;
+     min-width: 60px;
+     font-size: 12px;
+    }
+    QComboBox#speedComboBox:hover, QComboBox#speedComboBox:focus {
+     border-color: #00AA2A;
+     color: #00FF41;
+    }
+    QComboBox#speedComboBox::drop-down {
+     border: none;
+     width: 20px;
+    }
+    QComboBox#speedComboBox QAbstractItemView {
+     background-color: #1A251A;
+     border: 1px solid #007A1E;
+     color: #00AA2A;
+     selection-background-color: #007A1E;
+     selection-color: #00FF41;
+    }
+   </string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin">
+    <number>20</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>20</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="infoLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="trackInfoLabel">
+       <property name="text">
+        <string>轨迹回放: 未加载轨迹数据</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="infoSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="progressLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="timeLabel">
+       <property name="text">
+        <string>00:00.0</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="progressSlider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="tickPosition">
+        <enum>QSlider::NoTicks</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="durationLabel">
+       <property name="text">
+        <string>00:00.0</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="controlLayout">
+     <property name="spacing">
+      <number>15</number>
+     </property>
+     <item>
+      <spacer name="leftSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="loadButton">
+       <property name="text">
+        <string>📂 加载轨迹</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="playButton">
+       <property name="text">
+        <string>▶ 播放</string>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pauseButton">
+       <property name="text">
+        <string>⏸ 暂停</string>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="stopButton">
+       <property name="text">
+        <string>⏹ 停止</string>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="speedLabel">
+       <property name="text">
+        <string>倍速:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="speedComboBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <item>
+        <property name="text">
+         <string>1x</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2x</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4x</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="rightSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

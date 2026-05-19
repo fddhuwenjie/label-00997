@@ -10,6 +10,8 @@
 
 // 前向声明
 class RadarWidget;
+class TrackPlayer;
+class TrackControlPanel;
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +51,19 @@ private slots:
      */
     void updateStatusBar(double angle);
 
+    /**
+     * @brief 轨迹加载完成处理
+     * @param success 是否加载成功
+     * @param message 加载消息
+     */
+    void onTrackLoaded(bool success, const QString &message);
+
+    /**
+     * @brief 回放状态变化处理
+     * @param isPlaying 是否正在播放
+     */
+    void onTrackPlayStateChanged(bool isPlaying);
+
 private:
     /**
      * @brief 初始化UI样式
@@ -60,10 +75,18 @@ private:
      */
     void connectSignals();
 
+    /**
+     * @brief 连接轨迹回放相关信号槽
+     */
+    void connectTrackSignals();
+
 private:
     Ui::MainWindow *ui;
-    RadarWidget *m_radarWidget;  ///< 雷达显示控件
-    bool m_isRunning;            ///< 运行状态
+    RadarWidget *m_radarWidget;         ///< 雷达显示控件
+    TrackPlayer *m_trackPlayer;         ///< 轨迹回放控制器
+    TrackControlPanel *m_trackPanel;    ///< 轨迹回放控制面板
+    bool m_isRunning;                   ///< 运行状态
+    bool m_isTrackPlaying;              ///< 轨迹回放状态
 };
 
 #endif // MAINWINDOW_H

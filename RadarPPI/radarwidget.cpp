@@ -21,6 +21,7 @@ RadarWidget::RadarWidget(QWidget *parent)
     , m_isScanning(false)
     , m_radius(0.0)
     , m_distanceRings(5)
+    , m_trackPlaybackMode(false)
 {
     // 初始化颜色
     m_colorPrimaryGreen = QColor(0, 255, 65);       // #00FF41
@@ -84,6 +85,21 @@ void RadarWidget::reset()
 void RadarWidget::setRPM(int rpm)
 {
     m_rpm = qBound(1, rpm, 60);
+}
+
+void RadarWidget::setTrackPlaybackMode(bool enabled)
+{
+    m_trackPlaybackMode = enabled;
+    if (enabled) {
+        m_trackTargets.clear();
+    }
+    update();
+}
+
+void RadarWidget::onTrackTargetsUpdated(const QVector<ActiveTrackTarget> &targets)
+{
+    m_trackTargets = targets;
+    update();
 }
 
 void RadarWidget::onTimerUpdate()
@@ -360,28 +376,58 @@ void RadarWidget::updateTargetBrightness()
 
 void RadarWidget::drawTargets(QPainter &painter)
 {
-    for (const RadarTarget &target : m_targets) {
-        if (!target.active || target.brightness < 0.1) continue;
+    if (m_trackPlaybackMode) {
+        for (const ActiveTrackTarget &target : m_trackTargets) {
+            if (!target.active) continue;
 
-        QPointF pos = polarToCartesian(target.distance, target.azimuth);
+            QPointF pos = polarToCartesian(target.distance, target.azimuth);
 
-        // 目标大小基于距离和亮度
-        double baseSize = 6.0 + (1.0 - target.distance) * 4.0;
-        double size = baseSize * (0.5 + target.brightness * 0.5);
+            double baseSize = 7.0 + (1.0 - target.distance) * 5.0;
+            double size = baseSize * (0.6 + target.brightness * 0.4);
 
-        // 绘制目标光晕
-        QRadialGradient glow(pos, size * 2);
-        glow.setColorAt(0.0, QColor(0, 255, 65, int(255 * target.brightness)));
-        glow.setColorAt(0.3, QColor(0, 214, 52, int(150 * target.brightness)));
-        glow.setColorAt(0.6, QColor(0, 170, 42, int(80 * target.brightness)));
-        glow.setColorAt(1.0, QColor(0, 170, 42, 0));
+            QRadialGradient glow(pos, size * 2.5);
+            glow.setColorAt(0.0, QColor(0, 170, 255, int(230 * target.brightness)));
+            glow.setColorAt(0.3, QColor(0, 130, 220, int(130 * target.brightness)));
+            glow.setColorAt(0.6, QColor(0, 90, 180, int(70 * target.brightness)));
+            glow.setColorAt(1.0, QColor(0, 90, 180, 0));
 
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(glow);
-        painter.drawEllipse(pos, size * 2, size * 2);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(glow);
+            painter.drawEllipse(pos, size * 2.5, size * 2.5);
 
-        // 绘制目标核心
-        painter.setBrush(QColor(0, 255, 65, int(255 * target.brightness)));
-        painter.drawEllipse(pos, size * 0.5, size * 0.5);
+            painter.setBrush(QColor(0, 200, 255, int(255 * target.brightness)));
+            painter.drawEllipse(pos, size * 0.6, size * 0.6);
+
+            if (!target.targetId.isEmpty()) {
+                QFont font("Consolas", 8, QFont::Bold);
+                painter.setFont(font);
+                painter.setPen(QColor(0, 220, 255, int(255 * target.brightness)));
+                QFontMetrics fm(font);
+                int textWidth = fm.horizontalAdvance(target.targetId);
+                painter.drawText(pos.x() - textWidth / 2, pos.y() - size - 5, target.targetId);
+            }
+        }
+    } else {
+        for (const RadarTarget &target : m_targets) {
+            if (!target.active || target.brightness < 0.1) continue;
+
+            QPointF pos = polarToCartesian(target.distance, target.azimuth);
+
+            double baseSize = 6.0 + (1.0 - target.distance) * 4.0;
+            double size = baseSize * (0.5 + target.brightness * 0.5);
+
+            QRadialGradient glow(pos, size * 2);
+            glow.setColorAt(0.0, QColor(0, 255, 65, int(255 * target.brightness)));
+            glow.setColorAt(0.3, QColor(0, 214, 52, int(150 * target.brightness)));
+            glow.setColorAt(0.6, QColor(0, 170, 42, int(80 * target.brightness)));
+            glow.setColorAt(1.0, QColor(0, 170, 42, 0));
+
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(glow);
+            painter.drawEllipse(pos, size * 2, size * 2);
+
+            painter.setBrush(QColor(0, 255, 65, int(255 * target.brightness)));
+            painter.drawEllipse(pos, size * 0.5, size * 0.5);
+        }
     }
 }
