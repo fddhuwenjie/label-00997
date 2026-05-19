@@ -6,6 +6,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "radarwidget.h"
+#include "trackplayer.h"
+#include "trackcontrolpanel.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -15,26 +17,34 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_radarWidget(nullptr)
+    , m_trackPlayer(nullptr)
+    , m_trackPanel(nullptr)
     , m_isRunning(false)
+    , m_isTrackPlaying(false)
 {
     ui->setupUi(this);
 
-    // 设置窗口属性
     setWindowTitle("RadarPPI - 雷达P型显示仿真系统");
-    setMinimumSize(500, 550);
-    resize(700, 750);
+    setMinimumSize(500, 670);
+    resize(700, 870);
 
-    // 创建雷达显示控件
     m_radarWidget = new RadarWidget(this);
     ui->radarContainer->layout()->addWidget(m_radarWidget);
 
-    // 初始化样式
+    m_trackPlayer = new TrackPlayer(this);
+    m_trackPanel = new TrackControlPanel(this);
+
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(ui->centralwidget->layout());
+    if (mainLayout) {
+        int controlPanelIndex = mainLayout->indexOf(ui->controlPanel);
+        if (controlPanelIndex >= 0) {
+            mainLayout->insertWidget(controlPanelIndex, m_trackPanel);
+        }
+    }
+
     setupStyle();
-
-    // 连接信号槽
     connectSignals();
-
-    // 更新初始状态
+    connectTrackSignals();
     updateStatusBar(0.0);
 }
 
@@ -139,6 +149,75 @@ void MainWindow::onStartClicked()
     }
 }
 
+void MainWindow::updateStatusBar(double angle)
+{
+    QString angleText = QString("方位: %1°").arg(angle, 5, 'f', 1, ' ');
+    ui->angleLabel->setText(angleText);
+
+    QString rpmText = QString("转速: %1 RPM").arg(m_radarWidget->getRPM());
+    ui->rpmLabel->setText(rpmText);
+}
+
+void MainWindow::connectTrackSignals()
+{
+    connect(m_trackPanel, &TrackControlPanel::loadTrackRequested,
+            m_trackPlayer, &TrackPlayer::loadFromFile);
+    connect(m_trackPanel, &TrackControlPanel::playRequested,
+            m_trackPlayer, &TrackPlayer::play);
+    connect(m_trackPanel, &TrackControlPanel::pauseRequested,
+            m_trackPlayer, &TrackPlayer::pause);
+    connect(m_trackPanel, &TrackControlPanel::stopRequested,
+            m_trackPlayer, &TrackPlayer::stop);
+    connect(m_trackPanel, &TrackControlPanel::speedRequested,
+            m_trackPlayer, &TrackPlayer::setSpeed);
+    connect(m_trackPanel, &TrackControlPanel::seekRequested,
+            m_trackPlayer, &TrackPlayer::seek);
+
+    connect(m_trackPlayer, &TrackPlayer::trackLoaded,
+            m_trackPanel, &TrackControlPanel::onTrackLoaded);
+    connect(m_trackPlayer, &TrackPlayer::trackLoaded,
+            this, &MainWindow::onTrackLoaded);
+    connect(m_trackPlayer, &TrackPlayer::playStateChanged,
+            m_trackPanel, &TrackControlPanel::onPlayStateChanged);
+    connect(m_trackPlayer, &TrackPlayer::playStateChanged,
+            this, &MainWindow::onTrackPlayStateChanged);
+    connect(m_trackPlayer, &TrackPlayer::timeChanged,
+            m_trackPanel, &TrackControlPanel::onTimeChanged);
+    connect(m_trackPlayer, &TrackPlayer::speedChanged,
+            m_trackPanel, &TrackControlPanel::onSpeedChanged);
+    connect(m_trackPlayer, &TrackPlayer::playbackFinished,
+            m_trackPanel, &TrackControlPanel::onPlaybackFinished);
+    connect(m_trackPlayer, &TrackPlayer::targetsUpdated,
+            m_radarWidget, &RadarWidget::onTrackTargetsUpdated);
+}
+
+void MainWindow::onTrackLoaded(bool success, const QString &message)
+{
+    Q_UNUSED(message);
+    if (success) {
+        m_radarWidget->setTrackPlaybackMode(true);
+        if (m_isRunning) {
+            onStopClicked();
+        }
+        ui->startButton->setEnabled(false);
+        ui->statusLabel->setText("状态: 轨迹回放模式");
+    } else {
+        m_radarWidget->setTrackPlaybackMode(false);
+        ui->startButton->setEnabled(true);
+        ui->statusLabel->setText("状态: 就绪");
+    }
+}
+
+void MainWindow::onTrackPlayStateChanged(bool isPlaying)
+{
+    m_isTrackPlaying = isPlaying;
+    if (isPlaying) {
+        ui->statusLabel->setText("状态: 轨迹回放中");
+    } else {
+        ui->statusLabel->setText("状态: 轨迹回放已暂停");
+    }
+}
+
 void MainWindow::onStopClicked()
 {
     if (m_isRunning) {
@@ -148,23 +227,24 @@ void MainWindow::onStopClicked()
         ui->stopButton->setEnabled(false);
         ui->statusLabel->setText("状态: 已停止");
     }
+
+    if (m_trackPlayer->isLoaded()) {
+        m_trackPlayer->stop();
+    }
 }
 
 void MainWindow::onResetClicked()
 {
     m_isRunning = false;
+    m_isTrackPlaying = false;
     m_radarWidget->reset();
+    m_radarWidget->setTrackPlaybackMode(false);
     ui->startButton->setEnabled(true);
     ui->stopButton->setEnabled(false);
     ui->statusLabel->setText("状态: 已重置");
     updateStatusBar(0.0);
-}
 
-void MainWindow::updateStatusBar(double angle)
-{
-    QString angleText = QString("方位: %1°").arg(angle, 5, 'f', 1, ' ');
-    ui->angleLabel->setText(angleText);
-
-    QString rpmText = QString("转速: %1 RPM").arg(m_radarWidget->getRPM());
-    ui->rpmLabel->setText(rpmText);
+    if (m_trackPlayer->isLoaded()) {
+        m_trackPlayer->stop();
+    }
 }

@@ -10,6 +10,9 @@
 #include <QTimer>
 #include <QVector>
 #include <QPointF>
+#include <QString>
+
+#include "trackplayer.h"
 
 /**
  * @struct RadarTarget
@@ -76,12 +79,31 @@ public:
      */
     void setRPM(int rpm);
 
+    /**
+     * @brief 设置轨迹回放模式
+     * @param enabled 是否启用回放模式
+     */
+    void setTrackPlaybackMode(bool enabled);
+
+    /**
+     * @brief 获取是否处于回放模式
+     * @return 是否处于回放模式
+     */
+    bool isTrackPlaybackMode() const { return m_trackPlaybackMode; }
+
 signals:
     /**
      * @brief 扫描角度变化信号
      * @param angle 当前角度
      */
     void angleChanged(double angle);
+
+public slots:
+    /**
+     * @brief 更新回放目标数据
+     * @param targets 回放目标列表
+     */
+    void onTrackTargetsUpdated(const QVector<ActiveTrackTarget> &targets);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -170,6 +192,10 @@ private:
 
     // 目标数据
     QVector<RadarTarget> m_targets;
+
+    // 轨迹回放目标
+    QVector<ActiveTrackTarget> m_trackTargets;
+    bool m_trackPlaybackMode;
 
     // 颜色常量
     QColor m_colorPrimaryGreen;
